@@ -7,7 +7,7 @@ from sklearn.linear_model import LinearRegression
 import math
 
 # --- Load CSV ---
-st.title("MEFOCDeviation vs SpeedOG")
+st.title("ISOCorrectedFOC-ISOIdealFOC vs SpeedOG")
 
 df = pd.read_csv("combined_output.csv")
 
@@ -42,21 +42,21 @@ else:
     selected_ids = [name_to_id[name] for name in selected_names]
 
     st.sidebar.subheader("Wind Speed Range (m/s)")
-    wind_min = st.sidebar.number_input("Min Wind Speed", value=float(df["WindSpeedUsed"].min()), step=0.5)
-    wind_max = st.sidebar.number_input("Max Wind Speed", value=float(df["WindSpeedUsed"].max()), step=0.5)
+    wind_min = st.sidebar.number_input("Min Wind Speed", value=float(df["WindSpeedUsed"].min()))
+    wind_max = st.sidebar.number_input("Max Wind Speed", value=float(df["WindSpeedUsed"].max()))
 
     st.sidebar.subheader("Draft Range (m)")
-    draft_min = st.sidebar.number_input("Min Draft", value=float(df["MeanDraft"].min()), step=0.5)
-    draft_max = st.sidebar.number_input("Max Draft", value=float(df["MeanDraft"].max()), step=0.5)
+    draft_min = st.sidebar.number_input("Min Draft", value=float(df["MeanDraft"].min()))
+    draft_max = st.sidebar.number_input("Max Draft", value=float(df["MeanDraft"].max()))
 
     st.sidebar.subheader("SpeedOG Range (knots)")
-    speedOG_min = st.sidebar.number_input("Min SpeedOG", value=float(df["SpeedOG"].min()), step=0.5)
-    speedOG_max = st.sidebar.number_input("Max SpeedOG", value=float(df["SpeedOG"].max()), step=0.5)
+    speedOG_min = st.sidebar.number_input("Min SpeedOG", value=float(df["SpeedOG"].min()))
+    speedOG_max = st.sidebar.number_input("Max SpeedOG", value=float(df["SpeedOG"].max()))
 
-    degree = 2 #st.sidebar.slider("Polynomial Degree", 1, 5, 2)
+    degree = st.sidebar.slider("Polynomial Degree", 1, 5, 2)
     
     # NEW: Add option for manual speed ranges
-    # st.sidebar.subheader("MEFOCDeviation over SpeedOG Ranges")
+    # st.sidebar.subheader("ISOCorrectedFOC-ISOIdealFOC over SpeedOG Ranges")
     range_width = 1 #st.sidebar.number_input("Speed Range Width", min_value=0.5, max_value=5.0, value=1.0, step=0.5)
 
     # Apply initial data quality filters
@@ -66,6 +66,10 @@ else:
         (df["IsDeltaFOCMEValid"] == 1) & 
         (df["IsSpeedDropValid"] == 1)
     ]
+
+    df["ISOCorrectedFOC-ISOIdealFOC"] = (df["ISOCorrectedFOC"] - df["ISOIdealFOC"])*(1440/df["ME1RunningHoursMinute"])
+
+    
 
     # Apply user filters
     filtered_df = df[
@@ -114,8 +118,8 @@ else:
             without_deflectors = range_data[~range_data["VesselId"].isin(deflector_vessel_ids)]
             
             # Calculate means
-            with_mean = with_deflectors["MEFOCDeviation"].mean() if not with_deflectors.empty else None
-            without_mean = without_deflectors["MEFOCDeviation"].mean() if not without_deflectors.empty else None
+            with_mean = with_deflectors["ISOCorrectedFOC-ISOIdealFOC"].mean() if not with_deflectors.empty else None
+            without_mean = without_deflectors["ISOCorrectedFOC-ISOIdealFOC"].mean() if not without_deflectors.empty else None
             
             results.append({
                 'SpeedRange': f"({range_start:.1f}, {range_end:.1f}]",
@@ -139,37 +143,37 @@ else:
         lambda x: f"{x:.4f}" if pd.notna(x) else "None"
     )
     
-    # Calculate percentage difference
-    def calculate_percentage_diff(with_val, without_val):
-        if pd.isna(with_val) or pd.isna(without_val) or without_val == 0:
-            return None
-        return ((with_val - without_val) / without_val) * 100
+    # # Calculate percentage difference
+    # def calculate_percentage_diff(with_val, without_val):
+    #     if pd.isna(with_val) or pd.isna(without_val) or without_val == 0:
+    #         return None
+    #     return ((with_val - without_val) / without_val) * 100
     
-    display_df['Percentage_Difference'] = [
-        calculate_percentage_diff(row['WithDeflectors_Mean'], row['WithoutDeflectors_Mean']) 
-        for _, row in stats_df.iterrows()
-    ]
+    # display_df['Percentage_Difference'] = [
+    #     calculate_percentage_diff(row['WithDeflectors_Mean'], row['WithoutDeflectors_Mean']) 
+    #     for _, row in stats_df.iterrows()
+    # ]
     
-    # Format percentage difference
-    display_df['Percentage_Difference'] = display_df['Percentage_Difference'].apply(
-        lambda x: f"{x:.2f}%" if pd.notna(x) else "N/A"
-    )
+    # # Format percentage difference
+    # display_df['Percentage_Difference'] = display_df['Percentage_Difference'].apply(
+    #     lambda x: f"{x:.2f}%" if pd.notna(x) else "N/A"
+    # )
     
     # Rename columns for better display
     display_df = display_df.rename(columns={
         'SpeedRange': 'Speed Range',
-        'WithDeflectors_Mean': 'Weighted Avg MEFOCDeviation With Deflector',
+        'WithDeflectors_Mean': 'Weighted Avg ISOCorrectedFOC-ISOIdealFOC With Deflector',
         # 'WithDeflectors_Count': 'Count (With Deflectors)',
-        'WithoutDeflectors_Mean': 'Weighted Avg MEFOCDeviation Without Deflector',
+        'WithoutDeflectors_Mean': 'Weighted Avg ISOCorrectedFOC-ISOIdealFOC Without Deflector',
         # 'WithoutDeflectors_Count': 'Count (Without Deflectors)',
-        'Percentage_Difference': 'Percentage Difference'
+        # 'Percentage_Difference': 'Percentage Difference'
     })
     
     # Select columns to display (hiding count columns)
-    display_columns = ['Speed Range', 'Weighted Avg MEFOCDeviation With Deflector', 'Weighted Avg MEFOCDeviation Without Deflector', 'Percentage Difference']
+    display_columns = ['Speed Range', 'Weighted Avg ISOCorrectedFOC-ISOIdealFOC With Deflector', 'Weighted Avg ISOCorrectedFOC-ISOIdealFOC Without Deflector']
     
     # Show the table
-    st.subheader("MEFOCDeviation Over SpeedOG Ranges")
+    st.subheader("ISOCorrectedFOC-ISOIdealFOC Over SpeedOG Ranges")
     st.dataframe(display_df[display_columns])
     
     # # Show summary statistics
@@ -181,8 +185,8 @@ else:
     #     deflector_data = filtered_df[filtered_df["VesselId"].isin(vessel_with_deflectors)]
     #     if not deflector_data.empty:
     #         st.write(f"Total Records: {len(deflector_data)}")
-    #         st.write(f"Mean MEFOCDeviation: {deflector_data['MEFOCDeviation'].mean():.4f}")
-    #         st.write(f"Std MEFOCDeviation: {deflector_data['MEFOCDeviation'].std():.4f}")
+    #         st.write(f"Mean ISOCorrectedFOC-ISOIdealFOC: {deflector_data['ISOCorrectedFOC-ISOIdealFOC'].mean():.4f}")
+    #         st.write(f"Std ISOCorrectedFOC-ISOIdealFOC: {deflector_data['ISOCorrectedFOC-ISOIdealFOC'].std():.4f}")
     #     else:
     #         st.write("No data available")
     
@@ -191,8 +195,8 @@ else:
     #     non_deflector_data = filtered_df[~filtered_df["VesselId"].isin(vessel_with_deflectors)]
     #     if not non_deflector_data.empty:
     #         st.write(f"Total Records: {len(non_deflector_data)}")
-    #         st.write(f"Mean MEFOCDeviation: {non_deflector_data['MEFOCDeviation'].mean():.4f}")
-    #         st.write(f"Std MEFOCDeviation: {non_deflector_data['MEFOCDeviation'].std():.4f}")
+    #         st.write(f"Mean ISOCorrectedFOC-ISOIdealFOC: {non_deflector_data['ISOCorrectedFOC-ISOIdealFOC'].mean():.4f}")
+    #         st.write(f"Std ISOCorrectedFOC-ISOIdealFOC: {non_deflector_data['ISOCorrectedFOC-ISOIdealFOC'].std():.4f}")
     #     else:
     #         st.write("No data available")
 
@@ -204,11 +208,11 @@ else:
             return
 
         # Scatter plot of raw data
-        ax.scatter(group["SpeedOG"], group["MEFOCDeviation"], label=label, color=color1, alpha=0.6, s=30)
+        ax.scatter(group["SpeedOG"], group["ISOCorrectedFOC-ISOIdealFOC"], label=label, color=color1, alpha=0.6, s=30)
 
         # Polynomial Fit
         x = group["SpeedOG"].values.reshape(-1, 1)
-        y = group["MEFOCDeviation"].values
+        y = group["ISOCorrectedFOC-ISOIdealFOC"].values
 
         poly = PolynomialFeatures(degree=degree)
         x_poly = poly.fit_transform(x)
@@ -234,8 +238,8 @@ else:
 
     # Labels and Legend
     ax.set_xlabel("SpeedOG(knots)", fontsize=12)
-    ax.set_ylabel("MEFOCDeviation(%)", fontsize=12)
-    ax.set_title("MEFOCDeviation vs SpeedOG", fontsize=14)
+    ax.set_ylabel("ISOCorrectedFOC-ISOIdealFOC(MT/day)", fontsize=12)
+    ax.set_title("ISOCorrectedFOC-ISOIdealFOC vs SpeedOG", fontsize=14)
     ax.legend(fontsize=10)
     ax.grid(True, alpha=0.3)
     

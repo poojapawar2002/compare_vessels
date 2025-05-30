@@ -42,18 +42,18 @@ else:
     selected_ids = [name_to_id[name] for name in selected_names]
 
     st.sidebar.subheader("Wind Speed Range (m/s)")
-    wind_min = st.sidebar.number_input("Min Wind Speed", value=float(df["WindSpeedUsed"].min()))
-    wind_max = st.sidebar.number_input("Max Wind Speed", value=float(df["WindSpeedUsed"].max()))
+    wind_min = st.sidebar.number_input("Min Wind Speed", value=float(df["WindSpeedUsed"].min()), step=0.5)
+    wind_max = st.sidebar.number_input("Max Wind Speed", value=float(df["WindSpeedUsed"].max()), step=0.5)
 
     st.sidebar.subheader("Draft Range (m)")
-    draft_min = st.sidebar.number_input("Min Draft", value=float(df["MeanDraft"].min()))
-    draft_max = st.sidebar.number_input("Max Draft", value=float(df["MeanDraft"].max()))
+    draft_min = st.sidebar.number_input("Min Draft", value=float(df["MeanDraft"].min()), step=0.5)
+    draft_max = st.sidebar.number_input("Max Draft", value=float(df["MeanDraft"].max()), step=0.5)
 
     st.sidebar.subheader("SpeedOG Range (knots)")
-    speedOG_min = st.sidebar.number_input("Min SpeedOG", value=float(df["SpeedOG"].min()))
-    speedOG_max = st.sidebar.number_input("Max SpeedOG", value=float(df["SpeedOG"].max()))
+    speedOG_min = st.sidebar.number_input("Min SpeedOG", value=float(df["SpeedOG"].min()), step=0.5)
+    speedOG_max = st.sidebar.number_input("Max SpeedOG", value=float(df["SpeedOG"].max()), step=0.5)
 
-    degree = st.sidebar.slider("Polynomial Degree", 1, 5, 2)
+    degree = 2 #st.sidebar.slider("Polynomial Degree", 1, 5, 2)
     
     # NEW: Add option for manual speed ranges
     # st.sidebar.subheader("WeatherImpactFOC over SpeedOG Ranges")

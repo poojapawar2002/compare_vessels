@@ -7,7 +7,7 @@ from sklearn.linear_model import LinearRegression
 import math
 
 # --- Load CSV ---
-st.title("MEFOCIdealPD-MEFOCIdealPDCor vs SpeedOG")
+st.title("WeatherImpactFOC vs SpeedOG")
 
 df = pd.read_csv("combined_output.csv")
 
@@ -56,7 +56,7 @@ else:
     degree = st.sidebar.slider("Polynomial Degree", 1, 5, 2)
     
     # NEW: Add option for manual speed ranges
-    # st.sidebar.subheader("MEFOCIdealPD-MEFOCIdealPDCor over SpeedOG Ranges")
+    # st.sidebar.subheader("WeatherImpactFOC over SpeedOG Ranges")
     range_width = 1 #st.sidebar.number_input("Speed Range Width", min_value=0.5, max_value=5.0, value=1.0, step=0.5)
 
     # Apply initial data quality filters
@@ -67,9 +67,9 @@ else:
         (df["IsSpeedDropValid"] == 1)
     ]
 
-    df["MEFOCIdealPD-MEFOCIdealPDCor"] = (df["MEFOCIdealPD"] - df["MEFOCIdealPDCor"])*(1440/df["ME1RunningHoursMinute"])
+    df["WeatherImpactFOC"] = (df["MEFOCIdealPD"] - df["MEFOCIdealPDCor"])*(1440/df["ME1RunningHoursMinute"])
 
-    df = df[df["MEFOCIdealPD-MEFOCIdealPDCor"]>0]
+    df = df[df["WeatherImpactFOC"]>0]
 
     # Apply user filters
     filtered_df = df[
@@ -118,8 +118,8 @@ else:
             without_deflectors = range_data[~range_data["VesselId"].isin(deflector_vessel_ids)]
             
             # Calculate means
-            with_mean = with_deflectors["MEFOCIdealPD-MEFOCIdealPDCor"].mean() if not with_deflectors.empty else None
-            without_mean = without_deflectors["MEFOCIdealPD-MEFOCIdealPDCor"].mean() if not without_deflectors.empty else None
+            with_mean = with_deflectors["WeatherImpactFOC"].mean() if not with_deflectors.empty else None
+            without_mean = without_deflectors["WeatherImpactFOC"].mean() if not without_deflectors.empty else None
             
             results.append({
                 'SpeedRange': f"({range_start:.1f}, {range_end:.1f}]",
@@ -162,18 +162,18 @@ else:
     # Rename columns for better display
     display_df = display_df.rename(columns={
         'SpeedRange': 'Speed Range',
-        'WithDeflectors_Mean': 'Weighted Avg MEFOCIdealPD-MEFOCIdealPDCor With Deflector',
+        'WithDeflectors_Mean': 'Weighted Avg WeatherImpactFOC With Deflector',
         # 'WithDeflectors_Count': 'Count (With Deflectors)',
-        'WithoutDeflectors_Mean': 'Weighted Avg MEFOCIdealPD-MEFOCIdealPDCor Without Deflector',
+        'WithoutDeflectors_Mean': 'Weighted Avg WeatherImpactFOC Without Deflector',
         # 'WithoutDeflectors_Count': 'Count (Without Deflectors)',
         # 'Percentage_Difference': 'Percentage Difference'
     })
     
     # Select columns to display (hiding count columns)
-    display_columns = ['Speed Range', 'Weighted Avg MEFOCIdealPD-MEFOCIdealPDCor With Deflector', 'Weighted Avg MEFOCIdealPD-MEFOCIdealPDCor Without Deflector']
+    display_columns = ['Speed Range', 'Weighted Avg WeatherImpactFOC With Deflector', 'Weighted Avg WeatherImpactFOC Without Deflector']
     
     # Show the table
-    st.subheader("MEFOCIdealPD-MEFOCIdealPDCor Over SpeedOG Ranges")
+    st.subheader("WeatherImpactFOC Over SpeedOG Ranges")
     st.dataframe(display_df[display_columns])
     
     # # Show summary statistics
@@ -185,8 +185,8 @@ else:
     #     deflector_data = filtered_df[filtered_df["VesselId"].isin(vessel_with_deflectors)]
     #     if not deflector_data.empty:
     #         st.write(f"Total Records: {len(deflector_data)}")
-    #         st.write(f"Mean MEFOCIdealPD-MEFOCIdealPDCor: {deflector_data['MEFOCIdealPD-MEFOCIdealPDCor'].mean():.4f}")
-    #         st.write(f"Std MEFOCIdealPD-MEFOCIdealPDCor: {deflector_data['MEFOCIdealPD-MEFOCIdealPDCor'].std():.4f}")
+    #         st.write(f"Mean WeatherImpactFOC: {deflector_data['WeatherImpactFOC'].mean():.4f}")
+    #         st.write(f"Std WeatherImpactFOC: {deflector_data['WeatherImpactFOC'].std():.4f}")
     #     else:
     #         st.write("No data available")
     
@@ -195,8 +195,8 @@ else:
     #     non_deflector_data = filtered_df[~filtered_df["VesselId"].isin(vessel_with_deflectors)]
     #     if not non_deflector_data.empty:
     #         st.write(f"Total Records: {len(non_deflector_data)}")
-    #         st.write(f"Mean MEFOCIdealPD-MEFOCIdealPDCor: {non_deflector_data['MEFOCIdealPD-MEFOCIdealPDCor'].mean():.4f}")
-    #         st.write(f"Std MEFOCIdealPD-MEFOCIdealPDCor: {non_deflector_data['MEFOCIdealPD-MEFOCIdealPDCor'].std():.4f}")
+    #         st.write(f"Mean WeatherImpactFOC: {non_deflector_data['WeatherImpactFOC'].mean():.4f}")
+    #         st.write(f"Std WeatherImpactFOC: {non_deflector_data['WeatherImpactFOC'].std():.4f}")
     #     else:
     #         st.write("No data available")
 
@@ -208,11 +208,11 @@ else:
             return
 
         # Scatter plot of raw data
-        ax.scatter(group["SpeedOG"], group["MEFOCIdealPD-MEFOCIdealPDCor"], label=label, color=color1, alpha=0.6, s=30)
+        ax.scatter(group["SpeedOG"], group["WeatherImpactFOC"], label=label, color=color1, alpha=0.6, s=30)
 
         # Polynomial Fit
         x = group["SpeedOG"].values.reshape(-1, 1)
-        y = group["MEFOCIdealPD-MEFOCIdealPDCor"].values
+        y = group["WeatherImpactFOC"].values
 
         poly = PolynomialFeatures(degree=degree)
         x_poly = poly.fit_transform(x)
@@ -238,8 +238,8 @@ else:
 
     # Labels and Legend
     ax.set_xlabel("SpeedOG(knots)", fontsize=12)
-    ax.set_ylabel("MEFOCIdealPD-MEFOCIdealPDCor(MT/day)", fontsize=12)
-    ax.set_title("MEFOCIdealPD-MEFOCIdealPDCor vs SpeedOG", fontsize=14)
+    ax.set_ylabel("WeatherImpactFOC(MT/day)", fontsize=12)
+    ax.set_title("WeatherImpactFOC vs SpeedOG", fontsize=14)
     ax.legend(fontsize=10)
     ax.grid(True, alpha=0.3)
     

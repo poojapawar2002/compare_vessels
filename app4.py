@@ -53,9 +53,9 @@ else:
     speedOG_min = st.sidebar.number_input("Min SpeedOG", value=float(df["SpeedOG"].min()), step=0.5)
     speedOG_max = st.sidebar.number_input("Max SpeedOG", value=float(df["SpeedOG"].max()), step=0.5)
 
-    st.sidebar.subheader("Relative Wind Direction Range (degrees)")
-    rel_wind_dir_min = st.sidebar.number_input("Min Relative Wind", value=float(df["RelativeWindDirection"].min()), step=0.5)
-    rel_wind_dir_max = st.sidebar.number_input("Max Relative Wind", value=float(df["RelativeWindDirection"].max()), step=0.5)
+    # st.sidebar.subheader("Relative Wind Direction Range (degrees)")
+    # rel_wind_dir_min = st.sidebar.number_input("Min Relative Wind", value=float(df["RelativeWindDirection"].min()), step=0.5)
+    # rel_wind_dir_max = st.sidebar.number_input("Max Relative Wind", value=float(df["RelativeWindDirection"].max()), step=0.5)
 
 
 
@@ -82,8 +82,8 @@ else:
         (df["VesselId"].isin(selected_ids)) &
         (df["WindSpeedUsed"] > wind_min) & (df["WindSpeedUsed"] <= wind_max) &
         (df["MeanDraft"] > draft_min) & (df["MeanDraft"] <= draft_max) & 
-        (df["SpeedOG"] >= speedOG_min) & (df["SpeedOG"] <= speedOG_max) &
-        (df["RelativeWindDirection"] >= rel_wind_dir_min) & (df["RelativeWindDirection"] <= rel_wind_dir_max)
+        (df["SpeedOG"] >= speedOG_min) & (df["SpeedOG"] <= speedOG_max) 
+        # (df["RelativeWindDirection"] >= rel_wind_dir_min) & (df["RelativeWindDirection"] <= rel_wind_dir_max)
     ]
 
     # NEW APPROACH: Create manual speed ranges instead of using bins

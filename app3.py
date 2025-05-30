@@ -49,7 +49,7 @@ else:
     draft_min = st.sidebar.number_input("Min Draft", value=float(df["MeanDraft"].min()))
     draft_max = st.sidebar.number_input("Max Draft", value=float(df["MeanDraft"].max()))
 
-    st.sidebar.subheader("SpeedOG Range (m)")
+    st.sidebar.subheader("SpeedOG Range (knots)")
     speedOG_min = st.sidebar.number_input("Min SpeedOG", value=float(df["SpeedOG"].min()))
     speedOG_max = st.sidebar.number_input("Max SpeedOG", value=float(df["SpeedOG"].max()))
 

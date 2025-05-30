@@ -199,12 +199,12 @@ else:
     # Plot Setup
     fig, ax = plt.subplots(figsize=(12, 8))
 
-    def plot_scatter_and_fit(group, label, color, degree):
+    def plot_scatter_and_fit(group, label, color1, color2,degree):
         if group.empty:
             return
 
         # Scatter plot of raw data
-        ax.scatter(group["SpeedOG"], group["MEFOCDeviation"], label=label, color=color, alpha=0.6, s=30)
+        ax.scatter(group["SpeedOG"], group["MEFOCDeviation"], label=label, color=color1, alpha=0.6, s=30)
 
         # Polynomial Fit
         x = group["SpeedOG"].values.reshape(-1, 1)
@@ -218,14 +218,14 @@ else:
         x_range = np.linspace(x.min(), x.max(), 200).reshape(-1, 1)
         y_pred = model.predict(poly.transform(x_range))
 
-        ax.plot(x_range, y_pred, color=color, linewidth=3, label=f"{label} (trend)")
+        ax.plot(x_range, y_pred, color=color2, linewidth=3, label=f"{label} (trend)")
 
     # Split the groups for plotting
     deflector_group_plot = filtered_df[filtered_df["VesselId"].isin(vessel_with_deflectors)]
     non_deflector_group_plot = filtered_df[~filtered_df["VesselId"].isin(vessel_with_deflectors)]
 
-    plot_scatter_and_fit(deflector_group_plot, "With Deflector", "green", degree)
-    plot_scatter_and_fit(non_deflector_group_plot, "Without Deflector", "blue", degree)
+    plot_scatter_and_fit(deflector_group_plot, "With Deflector", "green","yellow", degree)  
+    plot_scatter_and_fit(non_deflector_group_plot, "Without Deflector", "blue", "orange",degree)
 
     # Add vertical lines to show speed ranges
     for range_start, range_end in speed_ranges:

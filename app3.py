@@ -7,7 +7,7 @@ from sklearn.linear_model import LinearRegression
 import math
 
 # --- Load CSV ---
-st.title("MEFOCDeviation vs SpeedOG (Manual Ranges + Polynomial Fit)")
+st.title("MEFOCDeviation vs SpeedOG")
 
 df = pd.read_csv("combined_output.csv")
 
@@ -41,11 +41,11 @@ else:
     # Map names back to IDs for filtering
     selected_ids = [name_to_id[name] for name in selected_names]
 
-    st.sidebar.subheader("Wind Speed Range")
+    st.sidebar.subheader("Wind Speed Range (m/s)")
     wind_min = st.sidebar.number_input("Min Wind Speed", value=float(df["WindSpeedUsed"].min()))
     wind_max = st.sidebar.number_input("Max Wind Speed", value=float(df["WindSpeedUsed"].max()))
 
-    st.sidebar.subheader("Draft Range")
+    st.sidebar.subheader("Draft Range (m)")
     draft_min = st.sidebar.number_input("Min Draft", value=float(df["MeanDraft"].min()))
     draft_max = st.sidebar.number_input("Max Draft", value=float(df["MeanDraft"].max()))
 
@@ -55,8 +55,8 @@ else:
     degree = st.sidebar.slider("Polynomial Degree", 1, 5, 2)
     
     # NEW: Add option for manual speed ranges
-    st.sidebar.subheader("Speed Range Analysis")
-    range_width = st.sidebar.number_input("Speed Range Width", min_value=0.5, max_value=5.0, value=1.0, step=0.5)
+    # st.sidebar.subheader("MEFOCDeviation over SpeedOG Ranges")
+    range_width = 1 #st.sidebar.number_input("Speed Range Width", min_value=0.5, max_value=5.0, value=1.0, step=0.5)
 
     # Apply initial data quality filters
     df = df[
@@ -157,18 +157,18 @@ else:
     # Rename columns for better display
     display_df = display_df.rename(columns={
         'SpeedRange': 'Speed Range',
-        'WithDeflectors_Mean': 'Mean (With Deflectors)',
+        'WithDeflectors_Mean': 'Weighted Avg MEFOCDeviation With Deflector',
         # 'WithDeflectors_Count': 'Count (With Deflectors)',
-        'WithoutDeflectors_Mean': 'Mean (Without Deflectors)',
+        'WithoutDeflectors_Mean': 'Weighted Avg MEFOCDeviation Without Deflector',
         # 'WithoutDeflectors_Count': 'Count (Without Deflectors)',
         'Percentage_Difference': 'Percentage Difference'
     })
     
     # Select columns to display (hiding count columns)
-    display_columns = ['Speed Range', 'Mean (With Deflectors)', 'Mean (Without Deflectors)', 'Percentage Difference']
+    display_columns = ['Speed Range', 'Weighted Avg MEFOCDeviation With Deflector', 'Weighted Avg MEFOCDeviation Without Deflector', 'Percentage Difference']
     
     # Show the table
-    st.subheader("Speed Range Analysis")
+    st.subheader("MEFOCDeviation Over SpeedOG Ranges")
     st.dataframe(display_df[display_columns])
     
     # # Show summary statistics
@@ -223,8 +223,8 @@ else:
     deflector_group_plot = filtered_df[filtered_df["VesselId"].isin(vessel_with_deflectors)]
     non_deflector_group_plot = filtered_df[~filtered_df["VesselId"].isin(vessel_with_deflectors)]
 
-    plot_scatter_and_fit(deflector_group_plot, "With Deflectors", "green", degree)
-    plot_scatter_and_fit(non_deflector_group_plot, "Without Deflectors", "blue", degree)
+    plot_scatter_and_fit(deflector_group_plot, "With Deflector", "green", degree)
+    plot_scatter_and_fit(non_deflector_group_plot, "Without Deflector", "blue", degree)
 
     # Add vertical lines to show speed ranges
     for range_start, range_end in speed_ranges:
@@ -232,9 +232,9 @@ else:
         ax.axvline(x=range_end, color='gray', linestyle='--', alpha=0.3)
 
     # Labels and Legend
-    ax.set_xlabel("SpeedOG", fontsize=12)
-    ax.set_ylabel("MEFOCDeviation", fontsize=12)
-    ax.set_title("Scatterplot of MEFOCDeviation vs SpeedOG with Polynomial Fit", fontsize=14)
+    ax.set_xlabel("SpeedOG(knots)", fontsize=12)
+    ax.set_ylabel("MEFOCDeviation(%)", fontsize=12)
+    ax.set_title("MEFOCDeviation vs SpeedOG", fontsize=14)
     ax.legend(fontsize=10)
     ax.grid(True, alpha=0.3)
     

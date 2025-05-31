@@ -54,8 +54,8 @@ else:
     speedOG_max = st.sidebar.number_input("Max SpeedOG", value=float(df["SpeedOG"].max()), step=0.5)
 
     st.sidebar.subheader("Relative Wind Direction Range (degrees)")
-    rel_wind_dir_min = st.sidebar.number_input("Min Relative Wind", value=float(df["RelativeWindDirection"].min()), step=0.5)
-    rel_wind_dir_max = st.sidebar.number_input("Max Relative Wind", value=float(df["RelativeWindDirection"].max()), step=0.5)
+    rel_wind_dir_min = st.sidebar.number_input("Min Relative Wind Direction", value=float(df["RelativeWindDirection"].min()), step=0.5)
+    rel_wind_dir_max = st.sidebar.number_input("Max Relative Wind Direction", value=float(df["RelativeWindDirection"].max()), step=0.5)
 
 
 

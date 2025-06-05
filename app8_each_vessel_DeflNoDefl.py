@@ -249,9 +249,9 @@ else:
             
             
         # Calculate and display percentage difference
-        if no_deflector_avg != 0:
-            percentage_diff = ((deflector_avg - no_deflector_avg) / no_deflector_avg) * 100
-            st.write(f"**Percentage Difference:** {percentage_diff:.2f}% ({'Higher' if percentage_diff > 0 else 'Lower'} with deflector)")
+        # if no_deflector_avg != 0:
+        #     percentage_diff = ((deflector_avg - no_deflector_avg) / no_deflector_avg) * 100
+        #     st.write(f"**Percentage Difference:** {percentage_diff:.2f}% ({'Higher' if percentage_diff > 0 else 'Lower'} with deflector)")
     
     else:
         st.warning("⚠️ No data available for the selected vessel and filter combination.")

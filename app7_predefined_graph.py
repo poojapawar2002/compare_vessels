@@ -45,6 +45,18 @@ st.markdown("""
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
+    .filter-section {
+        background: linear-gradient(135deg, #ff7675, #fd79a8);
+        color: white;
+        padding: 1rem;
+        border-radius: 10px;
+        text-align: center;
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin: 1rem 0 2rem 0;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
     .stExpander > div:first-child {
         background-color: #f8f9fa;
         border-radius: 8px;
@@ -66,7 +78,7 @@ st.markdown('<h1 class="main-header">⚓ FOCWindPower vs SpeedOG - Multi-Range A
 
 df = pd.read_csv("final_combined_output.csv")
 
-required_cols = ["VesselId", "WindSpeedUsed", "MeanDraft", "SpeedOG", "MEFOCDeviation", "IsDeltaFOCMEValid", "IsSpeedDropValid","FOCWindPower"]
+required_cols = ["VesselId", "WindSpeedUsed", "MeanDraft", "SpeedOG", "MEFOCDeviation", "IsDeltaFOCMEValid", "IsSpeedDropValid","FOCWindPower", "RelativeWindDirection"]
 if not all(col in df.columns for col in required_cols):
     st.error(f"CSV must include: {', '.join(required_cols)}")
 else:
@@ -89,10 +101,20 @@ else:
         (df["MEFOCDeviation"] >= 0) &
         (df["MEFOCDeviation"] <= 100) &
         (df["IsDeltaFOCMEValid"] == 1) & 
-        (df["IsSpeedDropValid"] == 1)
+        (df["IsSpeedDropValid"] == 1) & 
+        (df["RelativeWindDirection"] >= 0) &
+        (df["RelativeWindDirection"] <= 45) 
     ]
 
     df["FOCWindPower"] = (df["FOCWindPower"])*(1440/df["ME1RunningHoursMinute"])
+
+    # --- RELATIVE WIND DIRECTION FILTER SECTION ---
+    st.info("✅ We have considered here **Head Wind conditions** only (Relative Wind Direction between -45° and 45°).")
+
+
+    if df.empty:
+        st.error("❌ No data remains after applying the relative wind direction filter. Please adjust the range.")
+        st.stop()
 
     # Define predefined ranges
     draft_ranges = [(12.0, 12.5), (12.5, 13.0), (13.0, 13.5), (13.5, 14.0), (14.0, 14.5), (14.5, 15.0)]
@@ -101,11 +123,9 @@ else:
     degree = 2
     range_width = 1  # for speed ranges
     
-    # Set default values for SpeedOG and Relative Wind Direction
+    # Set default values for SpeedOG (after filtering)
     speedOG_min = float(df["SpeedOG"].min())
     speedOG_max = float(df["SpeedOG"].max())
-    rel_wind_dir_min = float(df["RelativeWindDirection"].min())
-    rel_wind_dir_max = float(df["RelativeWindDirection"].max())
 
     # Function to create speed ranges
     def create_speed_ranges(min_speed, max_speed, width):
@@ -192,12 +212,11 @@ else:
             with columns[j]:
                 st.markdown(f'<div class="wind-header">💨 Wind: {wind_min}-{wind_max} m/s</div>', unsafe_allow_html=True)
                 
-                # Filter data for current draft and wind ranges
+                # Filter data for current draft and wind ranges (relative wind direction already applied)
                 filtered_df = df[
                     (df["MeanDraft"] > draft_min) & (df["MeanDraft"] <= draft_max) & 
                     (df["WindSpeedUsed"] >= wind_min) & (df["WindSpeedUsed"] < wind_max) &
-                    (df["SpeedOG"] >= speedOG_min) & (df["SpeedOG"] <= speedOG_max) &
-                    (df["RelativeWindDirection"] >= rel_wind_dir_min) & (df["RelativeWindDirection"] <= rel_wind_dir_max)
+                    (df["SpeedOG"] >= speedOG_min) & (df["SpeedOG"] <= speedOG_max)
                 ]
                 
                 # Calculate and display speed-wise statistics table

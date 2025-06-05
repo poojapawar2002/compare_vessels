@@ -271,11 +271,11 @@ else:
                 title_parts = ["FOCWindPower vs SpeedOG"]
                 
                 if with_deflector_avg is not None and without_deflector_avg is not None:
-                    title_parts.append(f"Avg: With Deflector={with_deflector_avg:.3f}, Without Deflector={without_deflector_avg:.3f}")
+                    title_parts.append(f"Avg With Deflector={with_deflector_avg:.3f} MT/day, Without Deflector={without_deflector_avg:.3f} MT/day")
                 elif with_deflector_avg is not None:
-                    title_parts.append(f"Avg: With Deflector={with_deflector_avg:.3f}")
+                    title_parts.append(f"Avg With Deflector={with_deflector_avg:.3f}")
                 elif without_deflector_avg is not None:
-                    title_parts.append(f"Avg: Without Deflector={without_deflector_avg:.3f}")
+                    title_parts.append(f"Avg Without Deflector={without_deflector_avg:.3f}")
                 
                 ax.set_title("\n".join(title_parts), 
                             fontsize=16, fontweight='bold', color='#2E4057', pad=20)

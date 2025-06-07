@@ -109,7 +109,7 @@ else:
     df["FOCWindPower"] = (df["FOCWindPower"])*(1440/df["ME1RunningHoursMinute"])
 
     # --- RELATIVE WIND DIRECTION FILTER SECTION ---
-    st.info("✅ We have considered here **Head Wind conditions** only (Relative Wind Direction between -45° and 45°).")
+    st.info("✅ We have **Head Wind conditions** only (Relative Wind Direction between -45° and 45°).")
 
 
     if df.empty:

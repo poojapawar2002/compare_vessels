@@ -64,7 +64,9 @@ else:
         (df["MEFOCDeviation"] >= 0) &
         (df["MEFOCDeviation"] <= 100) &
         (df["IsDeltaFOCMEValid"] == 1) & 
-        (df["IsSpeedDropValid"] == 1)
+        (df["IsSpeedDropValid"] == 1) &
+        (df["FOCWindPowerDeflector"] >= 0) &
+        (df["FOCWindPowerNoDeflector"] >= 0) 
     ]
 
     df = df.dropna(subset=["VesselId", "WindSpeedUsed", "MeanDraft", "SpeedOG", "FOCWindPowerDeflector", "FOCWindPowerNoDeflector", "RelativeWindDirection"])

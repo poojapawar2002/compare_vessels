@@ -7,9 +7,11 @@ from sklearn.linear_model import LinearRegression
 import math
 
 # --- Load CSV ---
-st.title("FOCWindPower vs SpeedOG - Single Vessel Analysis")
+
 
 df = pd.read_csv("final_combined_output_new.csv")
+
+df["WindSpeedUsed"] = df["WindSpeedUsed"] * 1.94384  # Convert m/s to knots
 
 required_cols = ["VesselId", "WindSpeedUsed", "MeanDraft", "SpeedOG", "MEFOCDeviation", "IsDeltaFOCMEValid", "IsSpeedDropValid", "FOCWindPowerDeflector", "FOCWindPowerNoDeflector", "RelativeWindDirection", "ME1RunningHoursMinute", "StartDateUTC", "EndDateUTC"]
 if not all(col in df.columns for col in required_cols):
@@ -34,11 +36,13 @@ else:
     available_names = [vessel_names.get(vid, f"Unknown ({vid})") for vid in available_ids]
     selected_vessel_name = st.sidebar.selectbox("Select Vessel", available_names)
 
+    st.title(f"FOCWindPower vs SpeedOG for {selected_vessel_name}")
+
     # Map name back to ID for filtering
     name_to_id = {v: k for k, v in vessel_names.items()}
     selected_vessel_id = name_to_id[selected_vessel_name]
 
-    st.sidebar.subheader("Wind Speed Range (m/s)")
+    st.sidebar.subheader("Wind Speed Range (knots)")
     wind_min = st.sidebar.number_input("Min Wind Speed", value=float(df["WindSpeedUsed"].min()), step=0.5)
     wind_max = st.sidebar.number_input("Max Wind Speed", value=float(df["WindSpeedUsed"].max()), step=0.5)
 
@@ -62,6 +66,8 @@ else:
         (df["FOCWindPowerDeflector"] >= 0) &
         (df["FOCWindPowerNoDeflector"] >= 0) 
     ]
+
+    
 
     # Convert date columns to datetime if they're not already
     df["StartDateUTC"] = pd.to_datetime(df["StartDateUTC"])
@@ -88,7 +94,7 @@ else:
         return ranges
 
     if not filtered_df.empty:
-        speed_ranges = create_speed_ranges(filtered_df["SpeedOG"].min(), filtered_df["SpeedOG"].max(), range_width)
+        speed_ranges = create_speed_ranges(math.floor(filtered_df["SpeedOG"].min()), math.ceil(filtered_df["SpeedOG"].max()), range_width)
     else:
         speed_ranges = []
     

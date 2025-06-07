@@ -89,6 +89,8 @@ st.markdown("""
 
 df = pd.read_csv("final_combined_output_new.csv")
 
+df["WindSpeedUsed"] = df["WindSpeedUsed"] * 1.94384  # Convert m/s to knots
+
 required_cols = ["VesselId", "WindSpeedUsed", "MeanDraft", "SpeedOG", "MEFOCDeviation", "IsDeltaFOCMEValid", "IsSpeedDropValid", "FOCWindPowerDeflector", "FOCWindPowerNoDeflector", "RelativeWindDirection", "ME1RunningHoursMinute"]
 if not all(col in df.columns for col in required_cols):
     st.error(f"CSV must include: {', '.join(required_cols)}")
@@ -232,7 +234,7 @@ else:
 
     # Define predefined ranges
     draft_ranges = [(12.0, 12.5), (12.5, 13.0), (13.0, 13.5), (13.5, 14.0), (14.0, 14.5), (14.5, 15.0)]
-    wind_ranges = [(0, 5), (5, 10), (10, 15)]
+    wind_ranges = [(0, 10), (10, 20), (20, 30)]
     
     degree = 2
     range_width = 1  # for speed ranges
@@ -320,14 +322,14 @@ else:
         
         for j, (wind_min, wind_max) in enumerate(wind_ranges):
             with columns[j]:
-                st.markdown(f'<div class="wind-header">💨 Wind: {wind_min}-{wind_max} m/s</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="wind-header">💨 Wind: {wind_min}-{wind_max} knots</div>', unsafe_allow_html=True)
                 
                 # Filter data for current vessel, draft and wind ranges
-                filtered_df = df[
-                    (df["VesselId"] == selected_vessel_id) &
-                    (df["MeanDraft"] > draft_min) & (df["MeanDraft"] <= draft_max) & 
-                    (df["WindSpeedUsed"] >= wind_min) & (df["WindSpeedUsed"] < wind_max) &
-                    (df["SpeedOG"] >= speedOG_min) & (df["SpeedOG"] <= speedOG_max) 
+                filtered_df = overall_filtered_df[
+                    (overall_filtered_df["VesselId"] == selected_vessel_id) &
+                    (overall_filtered_df["MeanDraft"] > draft_min) & (overall_filtered_df["MeanDraft"] <= draft_max) & 
+                    (overall_filtered_df["WindSpeedUsed"] >= wind_min) & (overall_filtered_df["WindSpeedUsed"] < wind_max) &
+                    (overall_filtered_df["SpeedOG"] >= speedOG_min) & (overall_filtered_df["SpeedOG"] <= speedOG_max) 
                     # (df["RelativeWindDirection"] >= rel_wind_dir_min) & (df["RelativeWindDirection"] <= rel_wind_dir_max)
                 ]
                 

@@ -87,7 +87,7 @@ st.markdown("""
 # --- Load CSV ---
 # st.markdown('<h1 class="main-header">⚓ FOCWindPower vs SpeedOG - Vessel Analysis</h1>', unsafe_allow_html=True)
 
-df = pd.read_csv("final_combined_output.csv")
+df = pd.read_csv("final_combined_output_new.csv")
 
 required_cols = ["VesselId", "WindSpeedUsed", "MeanDraft", "SpeedOG", "MEFOCDeviation", "IsDeltaFOCMEValid", "IsSpeedDropValid", "FOCWindPowerDeflector", "FOCWindPowerNoDeflector", "RelativeWindDirection", "ME1RunningHoursMinute"]
 if not all(col in df.columns for col in required_cols):
@@ -127,9 +127,9 @@ else:
     speedOG_min = st.sidebar.number_input("Min SpeedOG", value=float(vessel_data["SpeedOG"].min()) if not vessel_data.empty else 0.0, step=0.5)
     speedOG_max = st.sidebar.number_input("Max SpeedOG", value=float(vessel_data["SpeedOG"].max()) if not vessel_data.empty else 20.0, step=0.5)
 
-    st.sidebar.subheader("Relative Wind Direction Range (degrees)")
-    rel_wind_dir_min = st.sidebar.number_input("Min Relative Wind Direction", value=float(vessel_data["RelativeWindDirection"].min()) if not vessel_data.empty else 0.0, step=0.5)
-    rel_wind_dir_max = st.sidebar.number_input("Max Relative Wind Direction", value=float(vessel_data["RelativeWindDirection"].max()) if not vessel_data.empty else 360.0, step=0.5)
+    # st.sidebar.subheader("Relative Wind Direction Range (degrees)")
+    # rel_wind_dir_min = st.sidebar.number_input("Min Relative Wind Direction", value=float(vessel_data["RelativeWindDirection"].min()) if not vessel_data.empty else 0.0, step=0.5)
+    # rel_wind_dir_max = st.sidebar.number_input("Max Relative Wind Direction", value=float(vessel_data["RelativeWindDirection"].max()) if not vessel_data.empty else 360.0, step=0.5)
     
     df['StartDateUTC'] = pd.to_datetime(df['StartDateUTC'])
     df['EndDateUTC'] = pd.to_datetime(df['EndDateUTC'])
@@ -156,8 +156,8 @@ else:
     # Calculate total savings for the selected vessel (with all filters applied)
     overall_filtered_df = df[
         (df["VesselId"] == selected_vessel_id) &
-        (df["SpeedOG"] >= speedOG_min) & (df["SpeedOG"] <= speedOG_max) &
-        (df["RelativeWindDirection"] >= rel_wind_dir_min) & (df["RelativeWindDirection"] <= rel_wind_dir_max)
+        (df["SpeedOG"] >= speedOG_min) & (df["SpeedOG"] <= speedOG_max) 
+        # (df["RelativeWindDirection"] >= rel_wind_dir_min) & (df["RelativeWindDirection"] <= rel_wind_dir_max)
     ]
 
     st.markdown(f'<div class="section-header">🚢 Wind Deflection Analysis for {selected_vessel_name}</div>', unsafe_allow_html=True)
@@ -171,19 +171,60 @@ else:
         overall_start_date = overall_filtered_df["StartDateUTC"].min().strftime("%Y-%m-%d")
         overall_end_date = overall_filtered_df["EndDateUTC"].max().strftime("%Y-%m-%d")
         total_running_hours = overall_filtered_df["ME1RunningHoursMinute"].sum() / 60  # Convert minutes to hours
+        total_savings_mt_day = total_savings / (total_running_hours / 24) if total_running_hours > 0 else 0
         
         # Display Total Savings prominently at the top
-        st.markdown(f"""
-        <div class="savings-card">
-            <div class="savings-subtitle">💰 Total Fuel Savings for {selected_vessel_name}</div>
-            <div class="savings-value">{total_savings:.2f} MT</div>
-            <div class="savings-subtitle">From {overall_start_date} to {overall_end_date}</div>
-            <div class="savings-subtitle">Total Running Hours: {total_running_hours:.1f} hours</div>
-            <div style="font-size: 0.9rem; margin-top: 1rem; opacity: 0.8;">
-                Without Deflector: {total_without_deflector:.2f} MT | With Deflector: {total_with_deflector:.2f} MT
-            </div>
-        </div>
+        # Shared CSS style for both cases
+        st.markdown("""
+            <style>
+                .savings-card {
+                    background-color: #00b894;
+                    color: white;
+                    padding: 25px;
+                    border-radius: 12px;
+                    text-align: center;
+                    font-family: 'Segoe UI', sans-serif;
+                    margin-bottom: 20px;
+                }
+                .savings-subtitle {
+                    font-size: 18px;
+                    font-weight: 500;
+                    margin: 8px 0;
+                }
+                .savings-value {
+                    font-size: 48px;
+                    font-weight: 700;
+                    margin: 20px 0;
+                }
+                .savings-details {
+                    font-size: 16px;
+                    font-weight: 400;
+                    margin-top: 5px;
+                }
+            </style>
         """, unsafe_allow_html=True)
+
+        # Conditional rendering based on vessel ID
+        if selected_vessel_id in [1004, 1007, 1018]:
+            title_text = f"Total Fuel Savings for {selected_vessel_name}"
+        else:
+            title_text = f"Total Fuel Savings for {selected_vessel_name} <i>if Deflector Was Installed</i>"
+
+        # Markdown content
+        st.markdown(f"""
+            <div class="savings-card">
+                <div class="savings-subtitle">{title_text}</div>
+                <div class="savings-value">{total_savings_mt_day:.2f} MT/day</div>
+                <div class="savings-subtitle">From {overall_start_date} to {overall_end_date}</div>
+                <div class="savings-details">
+                    After removing outliers:<br>
+                    <b>Total fuel saved:</b> {total_savings:.2f} MT &nbsp; | &nbsp;
+                    <b>Total Running Hours:</b> {total_running_hours:.1f} hours
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+
 
     # Convert FOC values
     overall_filtered_df["FOCWindPowerDeflector"] = (overall_filtered_df["FOCWindPowerDeflector"]) * (1440/overall_filtered_df["ME1RunningHoursMinute"])
@@ -286,8 +327,8 @@ else:
                     (df["VesselId"] == selected_vessel_id) &
                     (df["MeanDraft"] > draft_min) & (df["MeanDraft"] <= draft_max) & 
                     (df["WindSpeedUsed"] >= wind_min) & (df["WindSpeedUsed"] < wind_max) &
-                    (df["SpeedOG"] >= speedOG_min) & (df["SpeedOG"] <= speedOG_max) &
-                    (df["RelativeWindDirection"] >= rel_wind_dir_min) & (df["RelativeWindDirection"] <= rel_wind_dir_max)
+                    (df["SpeedOG"] >= speedOG_min) & (df["SpeedOG"] <= speedOG_max) 
+                    # (df["RelativeWindDirection"] >= rel_wind_dir_min) & (df["RelativeWindDirection"] <= rel_wind_dir_max)
                 ]
                 
                 # Calculate and display speed-wise statistics table

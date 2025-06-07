@@ -9,9 +9,9 @@ import math
 # --- Load CSV ---
 st.title("FOCWindPower vs SpeedOG - Single Vessel Analysis")
 
-df = pd.read_csv("final_combined_output.csv")
+df = pd.read_csv("final_combined_output_new.csv")
 
-required_cols = ["VesselId", "WindSpeedUsed", "MeanDraft", "SpeedOG", "MEFOCDeviation", "IsDeltaFOCMEValid", "IsSpeedDropValid", "FOCWindPowerDeflector", "FOCWindPowerNoDeflector", "RelativeWindDirection", "ME1RunningHoursMinute"]
+required_cols = ["VesselId", "WindSpeedUsed", "MeanDraft", "SpeedOG", "MEFOCDeviation", "IsDeltaFOCMEValid", "IsSpeedDropValid", "FOCWindPowerDeflector", "FOCWindPowerNoDeflector", "RelativeWindDirection", "ME1RunningHoursMinute", "StartDateUTC", "EndDateUTC"]
 if not all(col in df.columns for col in required_cols):
     st.error(f"CSV must include: {', '.join(required_cols)}")
 else:
@@ -28,8 +28,6 @@ else:
         1016: "CHARA",
         1018: "CARINA*"
     }
-
-    # st.write(df.shape[0], "records found in the dataset.")
 
     # Convert vessel IDs to names for UI - Single selection
     available_ids = df["VesselId"].unique()
@@ -52,10 +50,6 @@ else:
     speedOG_min = st.sidebar.number_input("Min SpeedOG", value=float(df["SpeedOG"].min()), step=0.5)
     speedOG_max = st.sidebar.number_input("Max SpeedOG", value=float(df["SpeedOG"].max()), step=0.5)
 
-    st.sidebar.subheader("Relative Wind Direction Range (degrees)")
-    rel_wind_dir_min = st.sidebar.number_input("Min Relative Wind Direction", value=float(df["RelativeWindDirection"].min()), step=0.5)
-    rel_wind_dir_max = st.sidebar.number_input("Max Relative Wind Direction", value=float(df["RelativeWindDirection"].max()), step=0.5)
-
     degree = 2
     range_width = 1
 
@@ -69,22 +63,20 @@ else:
         (df["FOCWindPowerNoDeflector"] >= 0) 
     ]
 
-    df = df.dropna(subset=["VesselId", "WindSpeedUsed", "MeanDraft", "SpeedOG", "FOCWindPowerDeflector", "FOCWindPowerNoDeflector", "RelativeWindDirection"])
+    # Convert date columns to datetime if they're not already
+    df["StartDateUTC"] = pd.to_datetime(df["StartDateUTC"])
+    df["EndDateUTC"] = pd.to_datetime(df["EndDateUTC"])
 
-    # Convert FOC values (assuming same conversion needed)
-    df["FOCWindPowerDeflector"] = (df["FOCWindPowerDeflector"]) * (1440/df["ME1RunningHoursMinute"])
-    df["FOCWindPowerNoDeflector"] = (df["FOCWindPowerNoDeflector"]) * (1440/df["ME1RunningHoursMinute"])
+    df = df.dropna(subset=["VesselId", "WindSpeedUsed", "MeanDraft", "SpeedOG", "FOCWindPowerDeflector", "FOCWindPowerNoDeflector", "RelativeWindDirection", "StartDateUTC", "EndDateUTC"])
+
 
     # Apply user filters for selected vessel
     filtered_df = df[
         (df["VesselId"] == selected_vessel_id) &
         (df["WindSpeedUsed"] > wind_min) & (df["WindSpeedUsed"] <= wind_max) &
         (df["MeanDraft"] > draft_min) & (df["MeanDraft"] <= draft_max) & 
-        (df["SpeedOG"] >= speedOG_min) & (df["SpeedOG"] <= speedOG_max) & 
-        (df["RelativeWindDirection"] >= rel_wind_dir_min) & (df["RelativeWindDirection"] <= rel_wind_dir_max)
+        (df["SpeedOG"] >= speedOG_min) & (df["SpeedOG"] <= speedOG_max) 
     ]
-
-    
 
     # Create speed ranges based on user input
     def create_speed_ranges(min_speed, max_speed, width):
@@ -138,6 +130,74 @@ else:
 
     # Calculate statistics
     if not filtered_df.empty:
+        # --- ADD SAVINGS CALCULATION SECTION HERE ---
+        # Calculate total savings for the filtered data
+        total_without_deflector = filtered_df["FOCWindPowerNoDeflector"].sum()
+        total_with_deflector = filtered_df["FOCWindPowerDeflector"].sum()
+        total_savings = total_without_deflector - total_with_deflector
+        
+        # Calculate overall date range and total running hours for display
+        overall_start_date = filtered_df["StartDateUTC"].min().strftime("%Y-%m-%d")
+        overall_end_date = filtered_df["EndDateUTC"].max().strftime("%Y-%m-%d")
+        total_running_hours = filtered_df["ME1RunningHoursMinute"].sum() / 60  # Convert minutes to hours
+        total_savings_mt_day = total_savings / (total_running_hours / 24) if total_running_hours > 0 else 0
+        
+        # Display Total Savings prominently at the top
+        st.markdown("""
+            <style>
+                .savings-card {
+                    background-color: #00b894;
+                    color: white;
+                    padding: 25px;
+                    border-radius: 12px;
+                    text-align: center;
+                    font-family: 'Segoe UI', sans-serif;
+                    margin-bottom: 20px;
+                }
+                .savings-subtitle {
+                    font-size: 18px;
+                    font-weight: 500;
+                    margin: 8px 0;
+                }
+                .savings-value {
+                    font-size: 48px;
+                    font-weight: 700;
+                    margin: 20px 0;
+                }
+                .savings-details {
+                    font-size: 16px;
+                    font-weight: 400;
+                    margin-top: 5px;
+                }
+            </style>
+        """, unsafe_allow_html=True)
+        
+        # Conditional rendering based on vessel ID
+        if selected_vessel_id in [1004, 1007, 1018]:
+            title_text = f"Total Fuel Savings for {selected_vessel_name}"
+        else:
+            title_text = f"Total Fuel Savings for {selected_vessel_name} <i>if Deflector Was Installed</i>"
+        
+        # Display the savings card
+        st.markdown(f"""
+            <div class="savings-card">
+                <div class="savings-subtitle">{title_text}</div>
+                <div class="savings-value">{total_savings_mt_day:.2f} MT/day</div>
+                <div class="savings-subtitle">From {overall_start_date} to {overall_end_date}</div>
+                <div class="savings-details">
+                    After applying current filters:<br>
+                    <b>Total fuel saved:</b> {total_savings:.2f} MT &nbsp; | &nbsp;
+                    <b>Total Running Hours:</b> {total_running_hours:.1f} hours
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+        
+        # Convert FOC values (assuming same conversion needed)
+        filtered_df["FOCWindPowerDeflector"] = (filtered_df["FOCWindPowerDeflector"]) * (1440/filtered_df["ME1RunningHoursMinute"])
+        filtered_df["FOCWindPowerNoDeflector"] = (filtered_df["FOCWindPowerNoDeflector"]) * (1440/filtered_df["ME1RunningHoursMinute"])
+        
+        # --- CONTINUE WITH EXISTING CODE ---
         stats_df = calculate_range_stats(filtered_df, speed_ranges)
         
         # Format for display
@@ -159,9 +219,9 @@ else:
         # Select columns to display
         display_columns = ['Speed Range', 'Avg FOCWindPower With Deflector', 'Avg FOCWindPower Without Deflector']
         
-        # Show the table
+        # Show the table with scrollable container
         st.subheader(f"FOCWindPower Over SpeedOG Ranges - {selected_vessel_name}")
-        st.dataframe(display_df[display_columns])
+        st.dataframe(display_df[display_columns], height=300, use_container_width=True)
 
         # Calculate overall averages for the title
         deflector_avg = filtered_df["FOCWindPowerDeflector"].mean()
@@ -248,12 +308,6 @@ else:
             st.write("**Without Deflector:**")
             st.write(f"Total Records: {len(filtered_df)}")
             st.write(f"Mean FOCWindPower: {no_deflector_avg:.4f}")
-            
-            
-        # Calculate and display percentage difference
-        # if no_deflector_avg != 0:
-        #     percentage_diff = ((deflector_avg - no_deflector_avg) / no_deflector_avg) * 100
-        #     st.write(f"**Percentage Difference:** {percentage_diff:.2f}% ({'Higher' if percentage_diff > 0 else 'Lower'} with deflector)")
     
     else:
         st.warning("⚠️ No data available for the selected vessel and filter combination.")

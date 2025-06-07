@@ -69,7 +69,6 @@ else:
 
     df = df.dropna(subset=["VesselId", "WindSpeedUsed", "MeanDraft", "SpeedOG", "FOCWindPowerDeflector", "FOCWindPowerNoDeflector", "RelativeWindDirection", "StartDateUTC", "EndDateUTC"])
 
-
     # Apply user filters for selected vessel
     filtered_df = df[
         (df["VesselId"] == selected_vessel_id) &
@@ -142,57 +141,60 @@ else:
         total_running_hours = filtered_df["ME1RunningHoursMinute"].sum() / 60  # Convert minutes to hours
         total_savings_mt_day = total_savings / (total_running_hours / 24) if total_running_hours > 0 else 0
         
-        # Display Total Savings prominently at the top
-        st.markdown("""
-            <style>
-                .savings-card {
-                    background-color: #00b894;
-                    color: white;
-                    padding: 25px;
-                    border-radius: 12px;
-                    text-align: center;
-                    font-family: 'Segoe UI', sans-serif;
-                    margin-bottom: 20px;
-                }
-                .savings-subtitle {
-                    font-size: 18px;
-                    font-weight: 500;
-                    margin: 8px 0;
-                }
-                .savings-value {
-                    font-size: 48px;
-                    font-weight: 700;
-                    margin: 20px 0;
-                }
-                .savings-details {
-                    font-size: 16px;
-                    font-weight: 400;
-                    margin-top: 5px;
-                }
-            </style>
-        """, unsafe_allow_html=True)
-        
         # Conditional rendering based on vessel ID
         if selected_vessel_id in [1004, 1007, 1018]:
             title_text = f"Total Fuel Savings for {selected_vessel_name}"
         else:
             title_text = f"Total Fuel Savings for {selected_vessel_name} <i>if Deflector Was Installed</i>"
         
-        # Display the savings card
-        st.markdown(f"""
-            <div class="savings-card">
-                <div class="savings-subtitle">{title_text}</div>
-                <div class="savings-value">{total_savings_mt_day:.2f} MT/day</div>
-                <div class="savings-subtitle">From {overall_start_date} to {overall_end_date}</div>
-                <div class="savings-details">
-                    After applying current filters:<br>
-                    <b>Total fuel saved:</b> {total_savings:.2f} MT &nbsp; | &nbsp;
-                    <b>Total Running Hours:</b> {total_running_hours:.1f} hours
+        # Collapsible Fuel Savings Section
+        with st.expander("🔋 **Fuel Savings Summary** - Click to view details", expanded=False):
+            # Display Total Savings with improved styling
+            st.markdown("""
+                <style>
+                    .savings-card {
+                        background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+                        color: white;
+                        padding: 25px;
+                        border-radius: 12px;
+                        text-align: center;
+                        font-family: 'Segoe UI', sans-serif;
+                        margin: 15px 0;
+                        box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
+                    }
+                    .savings-subtitle {
+                        font-size: 18px;
+                        font-weight: 500;
+                        margin: 8px 0;
+                    }
+                    .savings-value {
+                        font-size: 48px;
+                        font-weight: 700;
+                        margin: 20px 0;
+                        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+                    }
+                    .savings-details {
+                        font-size: 16px;
+                        font-weight: 400;
+                        margin-top: 5px;
+                    }
+                </style>
+            """, unsafe_allow_html=True)
+            
+            # Display the savings card
+            st.markdown(f"""
+                <div class="savings-card">
+                    <div class="savings-subtitle">{title_text}</div>
+                    <div class="savings-value">{total_savings_mt_day:.2f} MT/day</div>
+                    <div class="savings-subtitle">From {overall_start_date} to {overall_end_date}</div>
+                    <div class="savings-details">
+                        After applying current filters:<br>
+                        <b>Total fuel saved:</b> {total_savings:.2f} MT &nbsp; | &nbsp;
+                        <b>Total Running Hours:</b> {total_running_hours:.1f} hours
+                    </div>
                 </div>
-            </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
 
-        
         # Convert FOC values (assuming same conversion needed)
         filtered_df["FOCWindPowerDeflector"] = (filtered_df["FOCWindPowerDeflector"]) * (1440/filtered_df["ME1RunningHoursMinute"])
         filtered_df["FOCWindPowerNoDeflector"] = (filtered_df["FOCWindPowerNoDeflector"]) * (1440/filtered_df["ME1RunningHoursMinute"])
@@ -219,16 +221,16 @@ else:
         # Select columns to display
         display_columns = ['Speed Range', 'Avg FOCWindPower With Deflector', 'Avg FOCWindPower Without Deflector']
         
-        # Show the table with scrollable container
-        st.subheader(f"FOCWindPower Over SpeedOG Ranges - {selected_vessel_name}")
-        st.dataframe(display_df[display_columns], height=300, use_container_width=True)
+        # Collapsible SpeedOG Ranges Table
+        with st.expander("📊 **FOCWindPower Over SpeedOG Ranges** - Click to view table", expanded=False):
+            st.dataframe(display_df[display_columns], height=300, use_container_width=True)
 
         # Calculate overall averages for the title
         deflector_avg = filtered_df["FOCWindPowerDeflector"].mean()
         no_deflector_avg = filtered_df["FOCWindPowerNoDeflector"].mean()
         
-        # Plot Setup
-        fig, ax = plt.subplots(figsize=(12, 8))
+        # Plot Setup - Use full width
+        fig, ax = plt.subplots(figsize=(16, 10))  # Increased size for full page width
         
         # Set plot style
         plt.style.use('seaborn-v0_8-whitegrid')
@@ -267,18 +269,18 @@ else:
             ax.axvline(x=range_end, color='lightgray', linestyle=':', alpha=0.5, linewidth=1)
 
         # Enhanced styling
-        ax.set_xlabel("SpeedOG (knots)", fontsize=14, fontweight='bold', color='#2E4057')
-        ax.set_ylabel("FOCWindPower (MT/day)", fontsize=14, fontweight='bold', color='#2E4057')
+        ax.set_xlabel("SpeedOG (knots)", fontsize=16, fontweight='bold', color='#2E4057')
+        ax.set_ylabel("FOCWindPower (MT/day)", fontsize=16, fontweight='bold', color='#2E4057')
         
         # Create title with vessel name and averages
         title_parts = [f"FOCWindPower vs SpeedOG - {selected_vessel_name}"]
         title_parts.append(f"Avg: With Deflector={deflector_avg:.3f} MT/day, Without Deflector={no_deflector_avg:.3f} MT/day")
         
         ax.set_title("\n".join(title_parts), 
-                    fontsize=16, fontweight='bold', color='#2E4057', pad=20)
+                    fontsize=18, fontweight='bold', color='#2E4057', pad=20)
         
         # Enhanced legend
-        legend = ax.legend(fontsize=11, frameon=True, fancybox=True, shadow=True, 
+        legend = ax.legend(fontsize=13, frameon=True, fancybox=True, shadow=True, 
                          framealpha=0.9, facecolor='white', edgecolor='gray')
         legend.get_frame().set_linewidth(1.5)
         
@@ -292,22 +294,7 @@ else:
             spine.set_linewidth(1)
         
         plt.tight_layout()
-        st.pyplot(fig)
-        
-        # Display summary information
-        st.subheader("Summary Statistics")
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.write("**With Deflector:**")
-            st.write(f"Total Records: {len(filtered_df)}")
-            st.write(f"Mean FOCWindPower: {deflector_avg:.4f}")
-            
-        
-        with col2:
-            st.write("**Without Deflector:**")
-            st.write(f"Total Records: {len(filtered_df)}")
-            st.write(f"Mean FOCWindPower: {no_deflector_avg:.4f}")
+        st.pyplot(fig, use_container_width=True)  # Use full container width
     
     else:
         st.warning("⚠️ No data available for the selected vessel and filter combination.")

@@ -4,12 +4,21 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
+import pymongo
 import math
 
 # --- Load CSV ---
 st.title("FOCWindPower vs SpeedOG")
 
-df = pd.read_csv("final_combined_output.csv")
+mongo_url = st.secrets["mongo"]["uri"]
+client = pymongo.MongoClient(mongo_url)
+db = client["seaker_data"]
+collection = db["final_combined_output"]
+
+data = list(collection.find())
+df = pd.DataFrame(data)
+df.drop(columns=["_id"], inplace=True)
+# df = pd.read_csv("final_combined_output.csv")
 
 required_cols = ["VesselId", "WindSpeedUsed", "MeanDraft", "SpeedOG", "MEFOCDeviation", "IsDeltaFOCMEValid", "IsSpeedDropValid","FOCWindPower"]
 if not all(col in df.columns for col in required_cols):

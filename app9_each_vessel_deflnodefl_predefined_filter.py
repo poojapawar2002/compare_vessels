@@ -1,4 +1,5 @@
 import streamlit as st
+import pymongo
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -87,7 +88,12 @@ st.markdown("""
 # --- Load CSV ---
 # st.markdown('<h1 class="main-header">⚓ FOCWindPower vs SpeedOG - Vessel Analysis</h1>', unsafe_allow_html=True)
 
-df = pd.read_csv("final_combined_output_new.csv")
+mongo_url = st.secrets["mongo"]["uri"]
+client = pymongo.MongoClient(mongo_url)
+db = client["seaker_data"]
+collection = db["final_combined_output_new"]
+df = pd.DataFrame(list(collection.find()))
+df.drop(columns=["_id"], inplace=True)
 
 df["WindSpeedUsed"] = df["WindSpeedUsed"] * 1.94384  # Convert m/s to knots
 

@@ -95,9 +95,13 @@ collection = db["final_combined_output_new"]
 df = pd.DataFrame(list(collection.find()))
 df.drop(columns=["_id"], inplace=True)
 
+# df = pd.read_csv("final_combined_output_new.csv")
+
 df["WindSpeedUsed"] = df["WindSpeedUsed"] * 1.94384  # Convert m/s to knots
 
-required_cols = ["VesselId", "WindSpeedUsed", "MeanDraft", "SpeedOG", "MEFOCDeviation", "IsDeltaFOCMEValid", "IsSpeedDropValid", "FOCWindPowerDeflector", "FOCWindPowerNoDeflector", "RelativeWindDirection", "ME1RunningHoursMinute"]
+required_cols = ["VesselId", "WindSpeedUsed", "MeanDraft", "SpeedOG", "MEFOCDeviation", "IsDeltaFOCMEValid", "IsSpeedDropValid", "FOCWindPowerDeflector", "FOCWindPowerNoDeflector", "RelativeWindDirection", "ME1RunningHoursMinute", "StartDateUTC", "EndDateUTC"]
+df = df[required_cols]
+
 if not all(col in df.columns for col in required_cols):
     st.error(f"CSV must include: {', '.join(required_cols)}")
 else:

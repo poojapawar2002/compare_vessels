@@ -19,8 +19,9 @@ data = list(collection.find())
 df = pd.DataFrame(data)
 df.drop(columns=["_id"], inplace=True)
 # df = pd.read_csv("final_combined_output.csv")
-
+#"RelativeWindDirection","ME1RunningHoursMinute"
 required_cols = ["VesselId", "WindSpeedUsed", "MeanDraft", "SpeedOG", "MEFOCDeviation", "IsDeltaFOCMEValid", "IsSpeedDropValid","FOCWindPower"]
+# df = df[required_cols]
 if not all(col in df.columns for col in required_cols):
     st.error(f"CSV must include: {', '.join(required_cols)}")
 else:

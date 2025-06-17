@@ -143,8 +143,8 @@ else:
     # rel_wind_dir_min = st.sidebar.number_input("Min Relative Wind Direction", value=float(vessel_data["RelativeWindDirection"].min()) if not vessel_data.empty else 0.0, step=0.5)
     # rel_wind_dir_max = st.sidebar.number_input("Max Relative Wind Direction", value=float(vessel_data["RelativeWindDirection"].max()) if not vessel_data.empty else 360.0, step=0.5)
     
-    df['StartDateUTC'] = pd.to_datetime(df['StartDateUTC'])
-    df['EndDateUTC'] = pd.to_datetime(df['EndDateUTC'])
+    df['StartDateUTC'] = pd.to_datetime(df['StartDateUTC'], format = "%d-%m-%Y %H:%M")
+    df['EndDateUTC'] = pd.to_datetime(df['EndDateUTC'], format = "%d-%m-%Y %H:%M")
 
     # Apply initial data quality filters
     df = df[

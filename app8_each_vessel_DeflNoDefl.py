@@ -79,8 +79,8 @@ else:
     
 
     # Convert date columns to datetime if they're not already
-    df["StartDateUTC"] = pd.to_datetime(df["StartDateUTC"])
-    df["EndDateUTC"] = pd.to_datetime(df["EndDateUTC"])
+    df["StartDateUTC"] = pd.to_datetime(df["StartDateUTC"], format="%d-%m-%Y %H:%M")
+    df["EndDateUTC"] = pd.to_datetime(df["EndDateUTC"], format = "%d-%m-%Y %H:%M")
 
     df = df.dropna(subset=["VesselId", "WindSpeedUsed", "MeanDraft", "SpeedOG", "FOCWindPowerDeflector", "FOCWindPowerNoDeflector", "RelativeWindDirection", "StartDateUTC", "EndDateUTC"])
 
